@@ -10,24 +10,23 @@ Enhanced with power management, movement detection, improved GPS handling, batte
 
 This is a LoRaWAN node based on the [TTGO LoRa32 v2.0](https://github.com/LilyGO/TTGO-LORA32) development platform using the SSD1306 I2C OLED display.
 It uses a Semtech SX1276 and the MCCI LoRaWAN LMIC stack.
-This code is configured by default to connect to The Things Network using the EU 868 MHz frequency by default, but can be changed to US 915 MHz.
+This code is configured by default to connect to The Things Network using the EU 868 MHz frequency, but can be changed to US 915 MHz.
 
-Two additional boards has been used for this project:
+Two additional boards have been used for this project:
 - NEO-6M GPS with active antenna
-  In the project is present a file with some commands that will be passed to the GPS Unit in order to suppress some NMEA sentences and change the update rate to 5Hz
+  The project includes a file with commands that configure the GPS unit to suppress some NMEA sentences and change the update rate to 5 Hz
 
-- [TP4056 board](https://www.robotstore.it/Caricabatterie-Li-Ion-TP4056-con-circuito-di-protezione) to manage the battery (if voltage drops below 2.4v it will shutdown the output)
-  Even if the Lora32 board already have a charger ic, using this tiny board will provide USB-C instead of Micro-USB and some other features
-  like: discarge protection, overvoltage protection and inverse polarity protection.
+- [TP4056 board](https://www.robotstore.it/Caricabatterie-Li-Ion-TP4056-con-circuito-di-protezione) to manage the battery (if voltage drops below 2.4 V it will shut down the output)
+  Although the LoRa32 board already has a charger IC, using this small board provides USB-C instead of Micro-USB, as well as additional features such as discharge protection, overvoltage protection, and reverse polarity protection.
 
-NOTE: At the moment of writing there are at least 4 versions of the TTGO LoRa32, this code is focused on version 2.0, but can easily been adapted to other boards changing Pins.
-Please refer to the [attached image](ttgo_lora32_v2.0_pinout.png) in order to know pin mapping.
+NOTE: At the time of writing, there are at least four versions of the TTGO LoRa32, this code is focused on version 2.0, but can easily be adapted to other boards changing pins.
+Please refer to the [attached image](ttgo_lora32_v2.0_pinout.png) for pin mapping.
 
 ### Setup
 
-The preferred method to install this library is via [PlatformIO](https://platformio.org/install), however the original instructions for installing with the Arduino IDE are below but YMMV.
+The preferred method to install this library is via [PlatformIO](https://platformio.org/install), however the original instructions for installing with the Arduino IDE are below though your results may vary.
 
-**platformIO** users can ignore step 1 - 3, and have to set their region and radio type in ```platformio.ini```.
+**PlatformIO** users can ignore step 1 - 3, and have to set their region and radio type in ```platformio.ini```.
 
 1. Follow the directions at [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) to install the board to the Arduino IDE and use board 'T-Beam'.
 
@@ -42,7 +41,7 @@ The preferred method to install this library is via [PlatformIO](https://platfor
 
 1. Edit ```arduino-lmic/project_config/lmic_project_config.h``` and uncomment the proper frequency for your region.
 
-2. Edit this project file ```main/configuration.h``` and and confirm your setup.
+2. Edit this project file ```main/configuration.h``` and confirm your setup.
 
 3. Copy this project file ```main/credentials_default.h``` as ```main/credentials.h``` and change the Keys/EUIs for your Application's Device from The Things Network.
 
@@ -72,17 +71,17 @@ function Decoder(bytes, port) {
 
 7. Open this project file ```main/main.ino``` with the Arduino IDE and upload it to your TTGO LoRa32 v2.0.
 
-8. In order to get your board working, you need to solder a cable between pin GPIO33 to Lora DI01 to let Lora lib know when it need to open the RX window
-Also, if you want proper battery voltage detection you need to solder two 100KOmh resistors to form a Voltage Divider between the VCC pin coming from the PH2 connector ("+"), GND ("-") and the pin 35 (or another that you choose in [configuration.h](configuration.h))
-ie: VCC (PH2) ----- 100KOmh ----- PIN35 ----- 100KOmh ----- GND
+8. To get your board working, solder a wire between GPIO33 and LoRa DIO1 so the LoRa library knows when it needs to open the RX window.
+Also, for accurate battery voltage detection, solder two 100 kΩ resistors to form a voltage divider between the VCC pin from the PH2 connector ("+"), GND ("-"), and pin 35 (or another pin specified in [configuration.h](configuration.h))
+Example: VCC (PH2) ----- 100 kΩ ----- PIN35 ----- 100 kΩ ----- GND
 
-1. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
+9. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
 
 ## v2.0.0 Improvements
 
 ### Enhanced Power Management
 - **Deep Sleep Mode**: Automatically enters deep sleep when stationary to extend battery life
-- **Movement-Based Transmission**: Only transmits when device moves beyond 5-meters threshold
+- **Movement-Based Transmission**: Only transmits when the device moves beyond 5-meters threshold
 - **Adaptive Intervals**: Uses longer intervals (30s) when stationary, normal (60s) when moving
 - **LoRaWAN Timing Compliance**: Optimized for strict LoRaWAN duty cycle requirements
 - **Battery Status Report**: Battery voltage (moving average) and charge percentage are shown on the display
@@ -106,15 +105,15 @@ ie: VCC (PH2) ----- 100KOmh ----- PIN35 ----- 100KOmh ----- GND
 - **Session Persistence**: Maintains network session across deep sleep cycles
 
 ### Operation Modes
-- **Active Mode**: Normal operation with 60-second transmission intervals when moving
-- **Stationary Mode**: Extended 30-second deep sleep intervals when no movement detected
+- **Active Mode**: Transmits every 60 seconds when moving
+- **Stationary Mode**: Enters deep sleep with 30-second intervals when stationary
 - **Manual Mode**: Instant transmission via send button press (bypasses all intervals)
 - **Reset Mode**: Long-press discard button (9s) to clear network preferences and rejoin
 
 ### OLED Display
-- **Layout**: Proper message, icons and layout has been implemented to show info [see](tracker.jpg)
+- **Layout**: Proper messages, icons, and layout have been implemented to show info [see](tracker.jpg) for reference
 
 ### Power Consumption
-- **Active Tracking**: ~80mA average (ESP32 + GPS + LoRa)
-- **Deep Sleep**: ~15μA (ESP32 deep sleep, GPS remains powered)
-- **Transmission**: ~120mA peak during LoRa TX (brief duration)
+- **Active Tracking**: ~80 mA average (ESP32 + GPS + LoRa)
+- **Deep Sleep**: ~15 μA (ESP32 deep sleep, GPS remains powered)
+- **Transmission**: ~120 mA peak during LoRa TX (brief duration)

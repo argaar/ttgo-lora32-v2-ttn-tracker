@@ -110,7 +110,7 @@ void ttn_register(void (*callback)(uint8_t message));
 #define MISO_GPIO               19
 #define MOSI_GPIO               27
 #define NSS_GPIO                18
-#define RESET_GPIO              14
+#define RESET_GPIO              LMIC_UNUSED_PIN
 #define DIO0_GPIO               26
 #define DIO1_GPIO               33              // Note: YOU SHOULD SOLDER A JUMP BETWEEN MCU PIN AND LORA PIN 
 #define DIO2_GPIO               32              // Note: not really used on this board
