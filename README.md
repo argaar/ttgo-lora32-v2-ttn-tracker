@@ -102,4 +102,4 @@ Example: VCC (PH2) ----- 100 kΩ ----- PIN35 ----- 100 kΩ ----- GND
 
 ## Changelog
 
-See what changed between versions [here](CHANGELOG)
+See what changed between versions [here](CHANGELOG.md)
