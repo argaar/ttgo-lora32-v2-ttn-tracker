@@ -35,15 +35,11 @@ void ttn_register(void (*callback)(uint8_t message));
 // -----------------------------------------------------------------------------
 
 #define APP_NAME                "TTGO Lora32 MAP-TRACK"
-#define APP_VERSION             "2.0.0"
+#define APP_VERSION             "2.1.0"
 
 // -----------------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------------
-
-// Select the payload format. Change on TTN as well. Only uncomment one.
-#define PAYLOAD_USE_FULL
-//#define PAYLOAD_USE_CAYENNE
 
 // If you are having difficulty sending messages to TTN after the first successful send,
 // uncomment the next option and experiment with values (~ 1 - 5)
@@ -51,6 +47,9 @@ void ttn_register(void (*callback)(uint8_t message));
 
 #define DEBUG_PORT              Serial          // Serial debug port
 #define SERIAL_BAUD             115200          // Serial debug baud rate
+
+// Enable Battery Voltage Monitor
+#define BAT_MONITOR
 
 // Timing Constants
 #define SEND_INTERVAL           (60 * 1000)     // Default transmission interval
@@ -68,8 +67,11 @@ void ttn_register(void (*callback)(uint8_t message));
 // GPS Validation
 #define MAX_VALID_HDOP          (5.0)           // Maximum acceptable HDOP
 #define MIN_VALID_COORDS        (-1000.0)       // Minimum coordinate validation
-#define LORAWAN_PORT            1               // Port the messages will be sent to
-#define LORAWAN_CONFIRMED_EVERY 0               // Send confirmed message every these many messages (0 means never)
+
+// LoRawan Configuration
+#define LORAWAN_SEND_ALIVE                      // Send just an "alive" message in case gps doesn't fix
+#define LORAWAN_GPS_PORT        1               // Port the gps messages will be sent to
+#define LORAWAN_ALIVE_PORT      2               // Port the alive messages will be sent to
 #define LORAWAN_SF              DR_SF7          // Spreading factor (recommended DR_SF7 for ttn network map purposes, DR_SF10 works for slow moving trackers)
 #define LORAWAN_ADR             1               // Enable ADR for better network efficiency
 #define REQUIRE_RADIO           true            // If true, we will fail to start if the radio is not found
@@ -105,7 +107,6 @@ void ttn_register(void (*callback)(uint8_t message));
 #define GPS_TX_PIN              13
 
 // LoRa SPI
-
 #define SCK_GPIO                5
 #define MISO_GPIO               19
 #define MOSI_GPIO               27

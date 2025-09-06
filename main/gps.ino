@@ -103,11 +103,11 @@ bool gps_setup() {
         // Step 2: Set 5 Hz update rate
         gps_send_UBX(setRate5Hz, sizeof(setRate5Hz));
 
-        // Step 3: Enable only GGA
+        // Step 3: Enable only RMC+GGA
+        gps_send_UBX(enableRMC, sizeof(enableRMC));
         gps_send_UBX(enableGGA, sizeof(enableGGA));
         
         // Step 4: Disable other NMEA sentences
-        gps_send_UBX(disableRMC, sizeof(disableRMC));
         gps_send_UBX(disableGLL, sizeof(disableGLL));
         gps_send_UBX(disableGSA, sizeof(disableGSA));
         gps_send_UBX(disableGSV, sizeof(disableGSV));
@@ -197,46 +197,25 @@ static void gps_loop() {
     }
 }
 
-#if defined(PAYLOAD_USE_FULL)
+void buildGPSPacket(uint8_t gpsBuffer[10]) {
+    LatitudeBinary = ((_gps.location.lat() + 90) / 180.0) * 16777215;
+    LongitudeBinary = ((_gps.location.lng() + 180) / 360.0) * 16777215;
+    altitudeGps = _gps.altitude.meters();
+    hdopGps = _gps.hdop.value() / 10;
+    sats = _gps.satellites.value();
 
-    // More data than PAYLOAD_USE_CAYENNE
-    void buildPacket(uint8_t txBuffer[10]) {
-        LatitudeBinary = ((_gps.location.lat() + 90) / 180.0) * 16777215;
-        LongitudeBinary = ((_gps.location.lng() + 180) / 360.0) * 16777215;
-        altitudeGps = _gps.altitude.meters();
-        hdopGps = _gps.hdop.value() / 10;
-        sats = _gps.satellites.value();
+    gpsBuffer[0] = ( LatitudeBinary >> 16 ) & 0xFF;
+    gpsBuffer[1] = ( LatitudeBinary >> 8 ) & 0xFF;
+    gpsBuffer[2] = LatitudeBinary & 0xFF;
+    gpsBuffer[3] = ( LongitudeBinary >> 16 ) & 0xFF;
+    gpsBuffer[4] = ( LongitudeBinary >> 8 ) & 0xFF;
+    gpsBuffer[5] = LongitudeBinary & 0xFF;
+    gpsBuffer[6] = ( altitudeGps >> 8 ) & 0xFF;
+    gpsBuffer[7] = altitudeGps & 0xFF;
+    gpsBuffer[8] = hdopGps & 0xFF;
+    gpsBuffer[9] = sats & 0xFF;
+}
 
-        txBuffer[0] = ( LatitudeBinary >> 16 ) & 0xFF;
-        txBuffer[1] = ( LatitudeBinary >> 8 ) & 0xFF;
-        txBuffer[2] = LatitudeBinary & 0xFF;
-        txBuffer[3] = ( LongitudeBinary >> 16 ) & 0xFF;
-        txBuffer[4] = ( LongitudeBinary >> 8 ) & 0xFF;
-        txBuffer[5] = LongitudeBinary & 0xFF;
-        txBuffer[6] = ( altitudeGps >> 8 ) & 0xFF;
-        txBuffer[7] = altitudeGps & 0xFF;
-        txBuffer[8] = hdopGps & 0xFF;
-        txBuffer[9] = sats & 0xFF;
-    }
-
-#elif defined(PAYLOAD_USE_CAYENNE)
-
-    // CAYENNE DF
-    void buildPacket(uint8_t txBuffer[11]) {
-      
-        int32_t lat = _gps.location.lat() * 10000;
-        int32_t lon = _gps.location.lng() * 10000;
-        int32_t alt = _gps.altitude.meters() * 100;
-        
-        txBuffer[2] = lat >> 16;
-        txBuffer[3] = lat >> 8;
-        txBuffer[4] = lat;
-        txBuffer[5] = lon >> 16;
-        txBuffer[6] = lon >> 8;
-        txBuffer[7] = lon;
-        txBuffer[8] = alt >> 16;
-        txBuffer[9] = alt >> 8;
-        txBuffer[10] = alt;
-    }
-
-#endif
+void buildAlivePacket(uint8_t aliveBuffer[1]) {
+    aliveBuffer[0] = 1 & 0xFF;
+}

@@ -1,6 +1,6 @@
 ## TTGO LoRa32 v2.0 Enhanced GPS Tracker for The Things Network
 
-Current version: 2.0.0
+Current version: 2.1.0
 
 Advanced GPS tracker for [TTGO LoRa32 v2.0](https://github.com/LilyGO/TTGO-LORA32/) that uploads location data to [The Things Network](https://www.thethingsnetwork.org) (TTN) and (optionally) [TTN Mapper](https://ttnmapper.org).
 Features power-efficient operation with movement-based transmission and deep sleep capabilities.
@@ -48,24 +48,47 @@ The preferred method to install this library is via [PlatformIO](https://platfor
 4. Add the TTN Mapper integration to your Application (and optionally the Data Storage integration if you want to access the GPS location information yourself), then add the Decoder code:
 
 ```C
-function Decoder(bytes, port) {
-    var decoded = {};
+function decodeUplink(input) {
 
-    decoded.latitude = ((bytes[0]<<16)>>>0) + ((bytes[1]<<8)>>>0) + bytes[2];
-    decoded.latitude = (decoded.latitude / 16777215.0 * 180) - 90;
+    var data = {};
+    var events = {
+      1: "position",
+      2: "alive",
+    }; 
 
-    decoded.longitude = ((bytes[3]<<16)>>>0) + ((bytes[4]<<8)>>>0) + bytes[5];
-    decoded.longitude = (decoded.longitude / 16777215.0 * 360) - 180;
+    data.recvTime = input.recvTime.toString();
+    data.event = events[input.fPort];
 
-    var altValue = ((bytes[6]<<8)>>>0) + bytes[7];
-    var sign = bytes[6] & (1 << 7);
-    if(sign) decoded.altitude = 0xFFFF0000 | altValue;
-    else decoded.altitude = altValue;
+    if (input.fPort === 1) {
 
-    decoded.hdop = bytes[8] / 10.0;
-    decoded.sats = bytes[9];
+      data.latitude = ((input.bytes[0]<<16)>>>0) + ((input.bytes[1]<<8)>>>0) + input.bytes[2];
+      data.latitude = (data.latitude / 16777215.0 * 180) - 90;
 
-    return decoded;
+      data.longitude = ((input.bytes[3]<<16)>>>0) + ((input.bytes[4]<<8)>>>0) + input.bytes[5];
+      data.longitude = (data.longitude / 16777215.0 * 360) - 180;
+
+      var altValue = ((input.bytes[6]<<8)>>>0) + input.bytes[7];
+      var sign = input.bytes[6] & (1 << 7);
+      if(sign) data.altitude = 0xFFFF0000 | altValue;
+      else data.altitude = altValue;
+
+      data.hdop = input.bytes[8] / 10.0;
+      data.sats = input.bytes[9];
+
+    } else if (input.fPort === 2) {
+
+      alive = input.bytes[0];
+      if (alive === 1) {
+        data.message = "Device is alive";
+      } else {
+        data.message = "Wrong data";
+      }
+
+    }
+
+    return {
+      data: data,
+    };
 }
 ```
 
@@ -76,6 +99,13 @@ Also, for accurate battery voltage detection, solder two 100 kΩ resistors to fo
 Example: VCC (PH2) ----- 100 kΩ ----- PIN35 ----- 100 kΩ ----- GND
 
 9. Turn on the device and once a GPS lock is acquired, the device will start sending data to TTN and TTN Mapper.
+
+## v2.1.0 Improvements
+
+- **No confirmation**: Removed confirmation of messages every N. If we don’t receive an ACK from TTN, the packet remains in the queue. Since this is a tracker, we’re supposed to be moving, so keeping and resending an old position after we’ve already moved is not useful.
+- **Added alive message**: Introduced a new message on a separate LoRa port to send an "alive" event when no GPS fix is available. This confirms that the device can still communicate with the network, even if its position is unknown.
+- **Fix GPS Commands**: Only RMC and GGA sentences are now enabled and parsed from the GPS device.
+- **Payload Formatter**: Adapted to new TTN Uplink format
 
 ## v2.0.0 Improvements
 

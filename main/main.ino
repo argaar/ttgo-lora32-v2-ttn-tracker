@@ -44,19 +44,16 @@ static bool deep_sleep_enabled = ENABLE_DEEP_SLEEP;
 Bounce2::Button discard_button = Bounce2::Button();
 Bounce2::Button send_button = Bounce2::Button();
 
-#if defined(PAYLOAD_USE_FULL)
-// includes number of satellites and accuracy
-static uint8_t txBuffer[10];
-#elif defined(PAYLOAD_USE_CAYENNE)
-// CAYENNE DF
-static uint8_t txBuffer[11] = {0x03, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-#endif
+static uint8_t gpsBuffer[10];
+static uint8_t aliveBuffer[1];
 
 // -----------------------------------------------------------------------------
 // Application
 // -----------------------------------------------------------------------------
 
-void buildPacket(uint8_t txBuffer[]);  // needed for platformio
+// needed for platformio
+void buildGPSPacket(uint8_t gpsBuffer[]);
+void buildAlivePacket(uint8_t aliveBuffer[]);
 
 void enter_deep_sleep(uint32_t sleep_time_ms) {
     // Configure wake-up sources
@@ -83,21 +80,22 @@ bool trySend() {
         char buffer[24];
         snprintf(buffer, sizeof(buffer), "%.4f,%.4f %.0fm", gps_latitude(), gps_longitude(), gps_altitude());
         screen_print("gps", buffer);
-        buildPacket(txBuffer);
 
-        #if LORAWAN_CONFIRMED_EVERY > 0
-        bool confirmed = (ttn_get_count() % LORAWAN_CONFIRMED_EVERY == 0);
-        if (confirmed){ DEBUG_PORT.println("TTN message confirmation enabled"); }
-        #else
-        bool confirmed = false;
-        #endif
-
+        buildGPSPacket(gpsBuffer);
         packet_queued = true;
 
-        ttn_send(txBuffer, sizeof(txBuffer), LORAWAN_PORT, confirmed);
+        ttn_send(gpsBuffer, sizeof(gpsBuffer), LORAWAN_GPS_PORT, 0);
         return true;
     } else {
-        return false;
+        #ifdef LORAWAN_SEND_ALIVE
+            buildAlivePacket(aliveBuffer);
+            packet_queued = true;
+
+            ttn_send(aliveBuffer, sizeof(aliveBuffer), LORAWAN_ALIVE_PORT, 0);
+            return true;
+        #else
+            return false;
+        #endif
     }
 }
 
@@ -295,7 +293,11 @@ void loop() {
             #endif
         }
     } else {
-        battery_loop();
+        #ifdef BAT_MONITOR
+            battery_loop();
+        #else
+            screen_print("hw", "Board Ready");
+        #endif
     }
 
     gps_loop();
