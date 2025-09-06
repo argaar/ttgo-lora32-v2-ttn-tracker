@@ -77,9 +77,6 @@ bool trySend() {
         gps_latitude() != 0 && gps_longitude() != 0 && gps_altitude() != 0 &&
         gps_latitude() >= -90.0 && gps_latitude() <= 90.0 &&
         gps_longitude() >= -180.0 && gps_longitude() <= 180.0) {
-        char buffer[24];
-        snprintf(buffer, sizeof(buffer), "%.4f,%.4f %.0fm", gps_latitude(), gps_longitude(), gps_altitude());
-        screen_print("gps", buffer);
 
         buildGPSPacket(gpsBuffer);
         packet_queued = true;

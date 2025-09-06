@@ -192,6 +192,10 @@ static void gps_loop() {
             last_fix_time = millis();
         }
         gps_fixed = true;
+        
+        char buffer[24];
+        snprintf(buffer, sizeof(buffer), "%.4f,%.4f %.0fm", gps_latitude(), gps_longitude(), gps_altitude());
+        screen_print("gps", buffer);
     } else if (gps_get_time_since_fix() > GPS_TIMEOUT) {
         gps_fixed = false;
     }

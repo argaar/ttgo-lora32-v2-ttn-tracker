@@ -34,8 +34,8 @@ void ttn_register(void (*callback)(uint8_t message));
 // Version
 // -----------------------------------------------------------------------------
 
-#define APP_NAME                "TTGO Lora32 MAP-TRACK"
-#define APP_VERSION             "2.1.0"
+#define APP_NAME                "TTGO-LORA32-V2-TTN-TRACKER"
+#define APP_VERSION             "2.1.1"
 
 // -----------------------------------------------------------------------------
 // Configuration
